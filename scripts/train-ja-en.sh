@@ -22,9 +22,21 @@ fairseq-preprocess \
 mkdir -p $CKPT_DIR/jsalt_baseline_ja_en
 fairseq-train \
     $DATA_DIR/en-ja/data-bin \
-    -a transformer \
     --source-lang ja \
     --target-lang en \
+    --arch transformer \
+    --encoder-embed-dim 512
+    --encoder-ffn-embed-dim 1024
+    --encoder-attention-heads 4
+    --encoder-layers 6
+    --encoder-normalize-before True
+    --decoder-embed-dim 512
+    --decoder-ffn-embed-dim 1024
+    --decoder-attention-heads 4
+    --decoder-layers 6
+    --decoder-normalize-before True
+    --dropout 0.1
+    --share-all-embeddings True
     --optimizer adam \
     --adam-betas '(0.9, 0.98)'\
     --lr 0.0005 \
