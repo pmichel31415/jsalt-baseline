@@ -118,3 +118,9 @@ source env/bin/activate
 # BLEU score
 < mtnt.test.ja-en.out.en | sacrebleu -tok intl MTNT/test/test.ja-en.en
 ```
+
+## TODO
+
+- `fr-en` and `en-ja`
+- sentencepiece for `en<->fr`
+- scripts for evaluation on MTNT and newstest etc...
