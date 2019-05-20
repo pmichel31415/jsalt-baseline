@@ -5,19 +5,23 @@
 #SBATCH -J EN_JA_DOWNLOAD
 #SBATCH -o logs/log_ja_download.txt
 
-# Command line arguments
-HERE=`pwd`
-SCRIPTS=$HERE/mosesdecoder/scripts
-TOKENIZER=$SCRIPTS/tokenizer/tokenizer.perl
-CLEAN=$SCRIPTS/training/clean-corpus-n.perl
-NORM_PUNC=$SCRIPTS/tokenizer/normalize-punctuation.perl
-REM_NON_PRINT_CHAR=$SCRIPTS/tokenizer/remove-non-printing-char.perl
-KYTEA=kytea
-BPEROOT=$HERE/subword-nmt
+# Global config
+source scripts/globals.sh
+source env/bin/activate
+
+# Preprocessing commands
+TOKENIZER=$MOSES_SCRIPTS/tokenizer/tokenizer.perl
+CLEAN=$MOSES_SCRIPTS/training/clean-corpus-n.perl
+NORM_PUNC=$MOSES_SCRIPTS/tokenizer/normalize-punctuation.perl
+REM_NON_PRINT_CHAR=$MOSES_SCRIPTS/tokenizer/remove-non-printing-char.perl
+SPM_TRAIN=$SENTENCEPIECE_BINS/spm_train
+SPM_ENCODE=$SENTENCEPIECE_BINS/spm_encode
+
+# Hyperparameters
 BPE_TOKENS=32000
 
 # File name
-root_dir="/projects/tir3/users/pmichel1/data/en-ja"
+root_dir="${DATA_ROOT}/en-ja"
 TRAIN_FILE="${root_dir}/train"
 DEV_FILE="${root_dir}/valid"
 TEST_FILE="${root_dir}/test"
@@ -111,7 +115,7 @@ BPE_CODE=$root_dir/code
 if [ ! -f ${BPE_CODE}.model ]
 then
     echo "Training BPE"
-    spm_train --model_prefix=$BPE_CODE --vocab_size=$BPE_TOKENS --character_coverage=0.9995 --model_type=bpe --input=$tmp/train.en,$tmp/train.ja
+    $SPM_TRAIN --model_prefix=$BPE_CODE --vocab_size=$BPE_TOKENS --character_coverage=0.9995 --model_type=bpe --input=$tmp/train.en,$tmp/train.ja
 fi
 
 for L in en ja;
@@ -119,7 +123,7 @@ do
     for f in train.$L valid.$L test.$L;
     do
         echo "Subword segmenting ${f}..."
-        spm_encode --model=${BPE_CODE}.model --output_format=piece < $tmp/$f > $tmp/bpe.$f
+        $SPM_ENCODE --model=${BPE_CODE}.model --output_format=piece < $tmp/$f > $tmp/bpe.$f
     done
 done
 

@@ -2,20 +2,16 @@
 
 # Adapted from https://github.com/facebookresearch/MIXER/blob/master/prepareData.sh
 
-HERE=`pwd`
+# Global config
+source scripts/globals.sh
+source env/bin/activate
 
-echo 'Cloning Moses github repository (for tokenization scripts)...'
-git clone https://github.com/moses-smt/mosesdecoder.git
+# Preprocessing commands
+TOKENIZER=$MOSES_SCRIPTS/tokenizer/tokenizer.perl
+CLEAN=$MOSES_SCRIPTS/training/clean-corpus-n.perl
+NORM_PUNC=$MOSES_SCRIPTS/tokenizer/normalize-punctuation.perl
+REM_NON_PRINT_CHAR=$MOSES_SCRIPTS/tokenizer/remove-non-printing-char.perl
 
-echo 'Cloning Subword NMT repository (for BPE pre-processing)...'
-git clone https://github.com/rsennrich/subword-nmt.git
-
-SCRIPTS=$HERE/mosesdecoder/scripts
-TOKENIZER=$SCRIPTS/tokenizer/tokenizer.perl
-CLEAN=$SCRIPTS/training/clean-corpus-n.perl
-NORM_PUNC=$SCRIPTS/tokenizer/normalize-punctuation.perl
-REM_NON_PRINT_CHAR=$SCRIPTS/tokenizer/remove-non-printing-char.perl
-BPEROOT=$HERE/subword-nmt
 BPE_TOKENS=32000
 
 URLS=(
@@ -42,12 +38,11 @@ CORPORA=(
     "giga-fren.release2.fixed"
 )
 
-if [ ! -d "$SCRIPTS" ]; then
+if [ ! -d "$MOSES_SCRIPTS" ]; then
     echo "Please set SCRIPTS variable correctly to point to Moses scripts."
     exit
 fi
 
-root_dir="/projects/tir3/users/pmichel1/data"
 src=en
 tgt=fr
 lang=en-fr
@@ -55,7 +50,7 @@ prep=wmt15_en_fr
 tmp=$prep/tmp
 orig=orig
 
-cd $root_dir
+cd $DATA_ROOT
 
 mkdir -p $orig $tmp $prep
 
@@ -129,15 +124,17 @@ do
     cat $tmp/train.$l >> $TRAIN
 done
 
+# TODO: use sentencepiece instead and do aeay with tokenization
+
 echo "learn_bpe.py on ${TRAIN}..."
-python $BPEROOT/learn_bpe.py -s $BPE_TOKENS < $TRAIN > $BPE_CODE
+subword-nmt learn-bpe -s $BPE_TOKENS < $TRAIN > $BPE_CODE
 
 for L in $src $tgt;
 do
     for f in train.$L valid.$L test.$L;
     do
         echo "apply_bpe.py to ${f}..."
-        python $BPEROOT/apply_bpe.py -c $BPE_CODE < $tmp/$f > $tmp/bpe.$f
+        subword-nmt apply-bpe -c $BPE_CODE < $tmp/$f > $tmp/bpe.$f
     done
 done
 
