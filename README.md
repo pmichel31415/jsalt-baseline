@@ -9,15 +9,16 @@ source env/bin/activate
 ```
 - Install moses scripts: `git clone https://github.com/moses-smt/mosesdecoder.git`
 - Install subword-nmt: `pip install subword-nmt` (TODO test with sentencepiece instead for en-fr)
-- Install sentencepiece:
+- Install sentencepiece (NOTE: sentencepiece is broken right now because they're refactoring everything so we need to checkout an older version):
 ```bash
 git clone https://github.com/google/sentencepiece.git
 cd sentencepiece
+git checkout ffa2c8218f7afbb06d0c1bb87c82efb6867db41a
 HERE=`pwd -P`
 mkdir bin
 mkdir build
 cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=${HERE}/bin
+cmake .. -DCMAKE_INSTALL_PREFIX=${HERE}
 make -j $(nproc)
 make install
 cd ../..
@@ -118,3 +119,9 @@ source env/bin/activate
 # BLEU score
 < mtnt.test.ja-en.out.en | sacrebleu -tok intl MTNT/test/test.ja-en.en
 ```
+
+## TODO
+
+- `fr-en` and `en-ja`
+- sentencepiece for `en<->fr`
+- scripts for evaluation on MTNT and newstest etc...
