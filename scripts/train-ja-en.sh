@@ -4,7 +4,6 @@ source env/bin/activate
 
 
 # Binarize the dataset:
-TEXT=
 fairseq-preprocess \
     --source-lang ja \
     --target-lang en \

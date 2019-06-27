@@ -7,10 +7,11 @@ source scripts/globals.sh
 source env/bin/activate
 
 # Preprocessing commands
-TOKENIZER=$MOSES_SCRIPTS/tokenizer/tokenizer.perl
 CLEAN=$MOSES_SCRIPTS/training/clean-corpus-n.perl
 NORM_PUNC=$MOSES_SCRIPTS/tokenizer/normalize-punctuation.perl
 REM_NON_PRINT_CHAR=$MOSES_SCRIPTS/tokenizer/remove-non-printing-char.perl
+SPM_TRAIN=$SENTENCEPIECE_BINS/spm_train
+SPM_ENCODE=$SENTENCEPIECE_BINS/spm_encode
 
 BPE_TOKENS=32000
 
@@ -38,7 +39,7 @@ CORPORA=(
     "giga-fren.release2.fixed"
 )
 
-if [ ! -d "$MOSES_SCRIPTS" ]; then
+if [ ! -d "$MOSES_SCRIPTS" && ! -L "$MOSES_SCRIPTS" ]; then
     echo "Please set SCRIPTS variable correctly to point to Moses scripts."
     exit
 fi
@@ -88,8 +89,7 @@ do
     for f in "${CORPORA[@]}"; do
         cat $orig/$f.$l | \
             perl $NORM_PUNC $l | \
-            perl $REM_NON_PRINT_CHAR | \
-            perl $TOKENIZER -threads 8 -a -l $l >> $tmp/train.tags.$lang.tok.$l
+            perl $REM_NON_PRINT_CHAR >> $tmp/train.tags.$lang.tok.$l
     done
 done
 
@@ -104,8 +104,7 @@ do
     grep '<seg id' $orig/test/newsdiscusstest2015-enfr-$t.$l.sgm | \
         sed -e 's/<seg id="[0-9]*">\s*//g' | \
         sed -e 's/\s*<\/seg>\s*//g' | \
-        sed -e "s/\’/\'/g" | \
-    perl $TOKENIZER -threads 8 -a -l $l > $tmp/test.$l
+        sed -e "s/\’/\'/g" > $tmp/test.$l
     echo ""
 done
 
@@ -116,25 +115,17 @@ do
     awk '{if (NR%1333 != 0)  print $0; }' $tmp/train.tags.$lang.tok.$l > $tmp/train.$l
 done
 
-TRAIN=$tmp/train.fr-en
-BPE_CODE=$prep/code
-rm -f $TRAIN
-for l in $src $tgt;
-do
-    cat $tmp/train.$l >> $TRAIN
-done
-
 # TODO: use sentencepiece instead and do aeay with tokenization
-
-echo "learn_bpe.py on ${TRAIN}..."
-subword-nmt learn-bpe -s $BPE_TOKENS < $TRAIN > $BPE_CODE
+BPE_CODE=$prep/code
+echo "Training BPE..."
+$SPM_TRAIN --model_prefix=$BPE_CODE --vocab_size=$BPE_TOKENS --model_type=bpe --input=$tmp/train.en,$tmp/train.fr
 
 for L in $src $tgt;
 do
     for f in train.$L valid.$L test.$L;
     do
-        echo "apply_bpe.py to ${f}..."
-        subword-nmt apply-bpe -c $BPE_CODE < $tmp/$f > $tmp/bpe.$f
+        echo "Applying BPE to ${f}..."
+        $SPM_ENCODE --model=${BPE_CODE}.model --output_format=piece < $tmp/$f > $tmp/bpe.$f
     done
 done
 
