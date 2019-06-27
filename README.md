@@ -8,7 +8,7 @@ virtualenv --system-site-packages env
 source env/bin/activate
 ```
 - Install moses scripts: `git clone https://github.com/moses-smt/mosesdecoder.git`
-- Install subword-nmt: `pip install subword-nmt` (TODO test with sentencepiece instead for en-fr)
+- ~Install subword-nmt: `pip install subword-nmt` (TODO test with sentencepiece instead for en-fr)~
 - Install sentencepiece (NOTE: sentencepiece is broken right now because they're refactoring everything so we need to checkout an older version):
 ```bash
 git clone https://github.com/google/sentencepiece.git
@@ -22,6 +22,10 @@ cmake .. -DCMAKE_INSTALL_PREFIX=${HERE}
 make -j $(nproc)
 make install
 cd ../..
+# Add the following line to your .bashrc
+echo "export \$LD_LIBRARY_PATH=\"`pwd -P`/sentencepiece/lib:\$LD_LIBRARY_PATH\"" >> ~/.bashrc
+# This is optional and for convenience mostly
+echo "export \$PATH=\"`pwd -P`/sentencepiece/bin:\$PATH\"" >> ~/.bashrc
 ```
 - install fairseq 
 ```bash
