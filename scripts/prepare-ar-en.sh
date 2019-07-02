@@ -1,5 +1,11 @@
 #!/bin/sh
 
+####
+#Abdul Rafae Khan#
+#CUNY#
+#JSALT INFORMAL MT#
+####
+
 source env/bin/activate
 
 # suffix of source language files
