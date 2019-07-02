@@ -2,6 +2,12 @@
 
 source env/bin/activate
 
+####
+#Abdul Rafae Khan#
+#CUNY#
+#JSALT INFORMAL MT#
+####
+
 # suffix of source language files
 SRC=zh
 
