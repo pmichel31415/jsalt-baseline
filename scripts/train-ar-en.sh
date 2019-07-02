@@ -1,5 +1,11 @@
 #!/bin/bash
 
+####
+#Abdul Rafae Khan#
+#CUNY#
+#JSALT INFORMAL MT#
+####
+
 source env/bin/activate
 
 
@@ -50,5 +56,6 @@ for EXP in {actual-1k,literal-1k,actual-2k,literal-2k};do
 	fairseq-generate $DATABIN_ROOT \
 	--path $CKPT_ROOT/checkpoint_best.pt \
 	--batch-size 32 \
-	--beam 12 
+	--beam 12 \
+	--remove-bpe
 done
